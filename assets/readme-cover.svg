@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="312" viewBox="0 0 1160 312" role="img" aria-labelledby="title desc">
+  <title id="title">MassDownloader Desktop</title>
+  <desc id="desc">Тёмная обложка с оранжевой иконкой загрузки и схемой очереди файлов.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#121820"/>
+      <stop offset="1" stop-color="#202431"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#ffb277"/>
+      <stop offset="1" stop-color="#dd8544"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#aabdd2" stroke-opacity=".10"/>
+    </pattern>
+  </defs>
+  <rect width="1160" height="312" rx="24" fill="url(#background)"/>
+  <rect x="1" y="1" width="1158" height="310" rx="23" fill="none" stroke="#3c4554"/>
+  <path d="M660 1h475a24 24 0 0 1 24 24v262a24 24 0 0 1-24 24H660Z" fill="url(#grid)"/>
+  <rect x="56" y="48" width="68" height="68" rx="17" fill="#181f29" stroke="#eea067" stroke-width="1.5"/>
+  <path d="M90 64v29m-11-10 11 11 11-11m-25 15v6h28v-6" fill="none" stroke="url(#accent)" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.5"/>
+  <g font-family="'Segoe UI', system-ui, sans-serif">
+    <text x="143" y="77" fill="#ffb277" font-size="16" font-weight="700" letter-spacing="3">DESKTOP</text>
+    <text x="143" y="101" fill="#acb8c8" font-size="16">Windows · x64</text>
+    <text x="52" y="197" fill="#f5f7fa" font-size="65" font-weight="700" letter-spacing="-2.5">MassDownloader</text>
+    <text x="57" y="249" fill="#bac6d5" font-size="23">Поиск, очередь загрузок и библиотека</text>
+  </g>
+  <g transform="translate(729 48)">
+    <rect x="9" y="11" width="360" height="210" rx="17" fill="#090c11" fill-opacity=".43"/>
+    <rect width="360" height="210" rx="16" fill="#141a22" stroke="#515967"/>
+    <path d="M0 43h360" stroke="#373f4d"/>
+    <circle cx="20" cy="22" r="4" fill="#f1a466"/>
+    <circle cx="34" cy="22" r="4" fill="#596577"/>
+    <circle cx="48" cy="22" r="4" fill="#596577"/>
+    <rect x="19" y="61" width="322" height="38" rx="8" fill="#242d39"/>
+    <rect x="19" y="107" width="322" height="38" rx="8" fill="#1d2530"/>
+    <rect x="19" y="153" width="322" height="38" rx="8" fill="#1d2530"/>
+    <g fill="#353f4e">
+      <rect x="31" y="69" width="22" height="22" rx="5"/>
+      <rect x="31" y="115" width="22" height="22" rx="5"/>
+      <rect x="31" y="161" width="22" height="22" rx="5"/>
+    </g>
+    <g fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m37 80 4 4 6-8" stroke="#90d2aa"/>
+      <path d="M42 120v11m-4-4 4 4 4-4" stroke="#f1a466"/>
+      <circle cx="42" cy="172" r="5" stroke="#a7b4c5"/>
+      <path d="M42 169v3h2" stroke="#a7b4c5"/>
+    </g>
+    <g fill="#69788b">
+      <rect x="67" y="72" width="85" height="5" rx="2.5"/>
+      <rect x="67" y="118" width="117" height="5" rx="2.5"/>
+      <rect x="67" y="164" width="96" height="5" rx="2.5"/>
+    </g>
+    <rect x="67" y="84" width="240" height="4" rx="2" fill="#80bc98"/>
+    <rect x="67" y="130" width="240" height="4" rx="2" fill="#384453"/>
+    <rect x="67" y="130" width="151" height="4" rx="2" fill="url(#accent)"/>
+    <rect x="67" y="176" width="240" height="4" rx="2" fill="#384453"/>
+  </g>
+</svg>
