@@ -889,7 +889,7 @@ tr[data-status="failed"] .job-meter>i{background:var(--danger)}
 .fav-author .fa-read:disabled{color:var(--faint);opacity:.45;cursor:default}
 .fav-author .fa-read + .fa-del{margin-left:0}
 .favorites-view .grid{gap:12px}
-.favorites-view .fav-remove{top:6px;right:36px;z-index:4;display:grid;place-items:center;width:24px;height:24px;line-height:1;font-size:12px;color:#fff;background:rgba(8,11,16,.6);border:none;border-radius:50%;opacity:0}
+.favorites-view .fav-remove{z-index:4;display:grid;place-items:center;width:24px;height:24px;line-height:1;font-size:12px;color:#fff;background:rgba(8,11,16,.6);border:none;border-radius:50%;opacity:0}
 .favorites-view .card:hover .fav-remove,.fav-remove:focus-visible{opacity:1}
 .favorites-view .fav-remove:hover{background:var(--danger)}
 
