@@ -264,7 +264,7 @@ func registerDanbooruDonmai() {
 		Engine:       "danbooru",
 		PageLimit:    200,
 		// Anonymous access remains the default; if Cloudflare starts 403ing,
-		// the user can replay cf_clearance + UA exactly as on e621/e6ai.
+		// the user can replay cf_clearance + UA exactly as on e621/FloofGens.
 		CfProtected: true,
 		// Search uses danbooru.donmai.us; every preview/original is served by
 		// this official sibling host and must retain the same CF identity.

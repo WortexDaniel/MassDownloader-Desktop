@@ -91,7 +91,7 @@ func FindSitePost(rawURL string) (string, core.PostId) {
 	}
 	for _, site := range core.Sites() {
 		dom := strings.TrimPrefix(strings.ToLower(site.Domain), "www.")
-		if host == dom || strings.HasSuffix(host, "."+dom) {
+		if host == dom || strings.HasSuffix(host, "."+dom) || site.PreviousHosts[host] != "" {
 			engine := core.Registry.EngineFor(site)
 			if engine == nil {
 				return "", core.PostId{}
@@ -153,7 +153,10 @@ func resolveInApp(m *Match) {
 		if key != "" {
 			m.SiteKey = key
 			m.PostID = pid.String()
-			m.InApp = pid.String() != "" && pid.String() != "0" && core.SupportsReverseFetch(core.Registry.EngineFor(core.GetSite(key)))
+			site := core.GetSite(key)
+			m.URL = site.CurrentURL(m.URL)
+			m.ThumbURL = site.CurrentURL(m.ThumbURL)
+			m.InApp = pid.String() != "" && pid.String() != "0" && core.SupportsReverseFetch(core.Registry.EngineFor(site))
 		}
 	}
 }

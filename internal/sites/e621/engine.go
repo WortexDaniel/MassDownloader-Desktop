@@ -213,7 +213,7 @@ func (e *Engine) ParsePost(d map[string]any, site *core.Site) *core.PostInfo {
 				}
 			}
 		}
-		// e621 calls the author category "artist"; e6ai calls it "director"
+		// e621 calls the author category "artist"; FloofGens calls it "director".
 		for _, key := range []string{"artist", "director"} {
 			if list, ok := tagsObj[key].([]any); ok {
 				for _, t := range list {
@@ -331,5 +331,5 @@ func (e *Engine) DeriveArtists(post *core.PostInfo, hintTags []string) []string 
 func Register() {
 	core.RegisterEngine(&Engine{})
 	registerE621Net()
-	registerE6aiNet()
+	registerFloofGens()
 }

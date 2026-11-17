@@ -139,8 +139,11 @@ type Site struct {
 	APIDomain string `json:"api_domain,omitempty"`
 
 	StaticDomain string `json:"static_domain,omitempty"`
-	Engine       string `json:"engine"`     // which engine handles this site
-	PageLimit    int    `json:"page_limit"` // max posts per API page
+	// PreviousHosts maps retired page and CDN hosts to their replacements.
+	PreviousHosts map[string]string `json:"-"`
+
+	Engine    string `json:"engine"`     // which engine handles this site
+	PageLimit int    `json:"page_limit"` // max posts per API page
 
 	// MinInterval is the minimum seconds between API hits to this site's host
 	// (0 -> use the client default). The throttle is per-host, so each site

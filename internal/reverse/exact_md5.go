@@ -12,7 +12,7 @@ type ExactMD5 struct{}
 func (ExactMD5) Key() string   { return "exact_md5" }
 func (ExactMD5) Label() string { return "Точный MD5" }
 func (ExactMD5) Blurb() string {
-	return "Оригиналы: e621/e6ai · AIBooru · Konachan · Gelbooru-сайты"
+	return "Оригиналы: e621/FloofGens · AIBooru · Konachan · Gelbooru-сайты"
 }
 func (ExactMD5) Available(func(string) string) (bool, string) { return true, "" }
 func (p ExactMD5) Search(c *core.ApiClient, image []byte, _ string, _ func(string) string, stop func() bool) ([]Match, error) {

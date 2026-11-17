@@ -1,4 +1,4 @@
-// e621/e6ai discovery modes share one order slot with normal sorting.
+// e621/FloofGens discovery modes share one order slot with normal sorting.
 export const discoverySite = site => ['e621', 'e6ai'].includes(site?.key);
 const orderToken = token => /^-?order:/i.test(token);
 const dateToken = token => /^[-~]?date:/i.test(token);

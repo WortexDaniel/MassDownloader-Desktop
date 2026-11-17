@@ -74,6 +74,13 @@ func New(path string) (*Settings, error) {
 	if err := s.load(); err != nil {
 		return nil, err
 	}
+	if s.Data["floofgens_credentials_migrated"] != true {
+		// The replacement site uses separate accounts and Cloudflare cookies.
+		if creds, ok := s.Data["credentials"].(map[string]any); ok {
+			delete(creds, "e6ai")
+		}
+		s.Data["floofgens_credentials_migrated"] = true
+	}
 	if err := s.Save(); err != nil {
 		return nil, err
 	}

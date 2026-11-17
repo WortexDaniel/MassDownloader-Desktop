@@ -43,7 +43,7 @@
 
 | Группа | Адаптеры в приложении |
 | --- | --- |
-| Имиджборды | e621, e6ai, Danbooru, AIBooru, Konachan, Gelbooru, Rule34, Xbooru, TBIB, Sankaku Channel, Idol Complex |
+| Имиджборды | e621, FloofGens, Danbooru, AIBooru, Konachan, Gelbooru, Rule34, Xbooru, TBIB, Sankaku Channel, Idol Complex |
 | Архивы публикаций | Kemono, Coomer, Pawchive, OnlyHaven |
 | Портфолио и соцсети | Pixiv, DeviantArt, FurAffinity, X, Misskey.io |
 

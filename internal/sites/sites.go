@@ -19,10 +19,10 @@ import (
 )
 
 // Register installs all engines and sites in the README's registration order:
-// e621/e6ai; Danbooru/AIBooru; Konachan; Gelbooru family; Sankaku; Kemono;
+// e621/FloofGens; Danbooru/AIBooru; Konachan; Gelbooru family; Sankaku; Kemono;
 // X; FurAffinity; Pixiv; DeviantArt; Misskey.io — 18 sites, 14 engines.
 func Register() {
-	e621.Register()     // e621, e6ai
+	e621.Register()     // e621, FloofGens
 	danbooru.Register() // danbooru, aibooru
 	moebooru.Register() // konachan
 	gelbooru.Register() // rule34, xbooru, tbib, gelbooru.com

@@ -5,6 +5,32 @@ import (
 	"strings"
 )
 
+// CurrentURL updates a saved URL whose site or CDN moved to a new host.
+func (s *Site) CurrentURL(raw string) string {
+	if len(s.PreviousHosts) == 0 || raw == "" {
+		return raw
+	}
+	u, err := url.Parse(raw)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.User != nil {
+		return raw
+	}
+	host := strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.")
+	if newHost := s.PreviousHosts[host]; newHost != "" {
+		u.Scheme, u.Host = "https", newHost
+		return u.String()
+	}
+	return raw
+}
+
+// RewriteLegacyMedia refreshes the URLs of a post loaded from local storage.
+func (s *Site) RewriteLegacyMedia(post *PostInfo) {
+	post.PreviewURL = s.CurrentURL(post.PreviewURL)
+	post.SampleURL = s.CurrentURL(post.SampleURL)
+	if post.File != nil {
+		post.File.URL = s.CurrentURL(post.File.URL)
+	}
+}
+
 // SetDanbooruGold installs the tags that require the media_assets route.
 // An empty or disabled list preserves primary-first transfers.
 func (c *ApiClient) SetDanbooruGold(enabled bool, tags []string) {

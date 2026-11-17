@@ -171,6 +171,9 @@ func PostFromDict(d map[string]any) *core.PostInfo {
 			Height: int(intOr(fd["height"])),
 		}
 	}
+	if site := core.GetSite(p.Site); site != nil {
+		site.RewriteLegacyMedia(p)
+	}
 	return p
 }
 

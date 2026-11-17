@@ -19,17 +19,18 @@ func registerE621Net() {
 	})
 }
 
-// registerE6aiNet ports e6ai_net.py: sister site (AI art). Same engine; the
-// author category is called "director" instead of "artist" (parser handles).
-func registerE6aiNet() {
+func registerFloofGens() {
+	const domain = "floofgens.net"
+	const cdn = "static1.floofgens.net"
 	core.RegisterSite(&core.Site{
-		Key:            "e6ai",
-		Label:          "e6ai.net",
-		Domain:         "e6ai.net",
-		StaticDomain:   "static1.e6ai.net",
+		Key:            "e6ai", // persistent key for existing local data
+		Label:          domain,
+		Domain:         domain,
+		StaticDomain:   cdn,
+		PreviousHosts:  map[string]string{"e6ai.net": domain, "static1.e6ai.net": cdn},
 		Engine:         "e621",
-		MinInterval:    1.0,  // answered 429 (Retry-After: 2) at 0.55 s
-		CfProtected:    true, // same Cloudflare front as e621
-		CfExtraDomains: []string{"static1.e6ai.net"},
+		MinInterval:    1.0,
+		CfProtected:    true,
+		CfExtraDomains: []string{cdn},
 	})
 }
