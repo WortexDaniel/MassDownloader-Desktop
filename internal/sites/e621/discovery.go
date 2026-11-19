@@ -121,7 +121,7 @@ func (e *Engine) FetchPage(c *core.ApiClient, site *core.Site, tags string, limi
 		if fetchErr != nil {
 			return core.PageResult{}, fetchErr
 		}
-		posts, err = parsePosts(data, site, e.ParsePost)
+		posts, err = parsePosts(data, site, e.ParsePost, site.Key == "e621" && c.E621Authorization() != "")
 		if err != nil {
 			return core.PageResult{}, err
 		}

@@ -129,8 +129,9 @@ function renderCardThumbnail(card, post) {
   if (previous) previous.replaceWith(thumb); else card.prepend(thumb);
 }
 export function bindGridEvents() {
-	window.runtime?.EventsOn('credentials:changed', () => {
+	window.runtime?.EventsOn('credentials:changed', e621Changed => {
 	  thumbGeneration++;
+	  if (e621Changed && !window.isFeedWindow && grid.searched && grid.site === 'e621' && state.currentSite?.key === 'e621') runSearch();
 	  for (const card of document.querySelectorAll('.card')) {
 	    const post=cardPosts.get(card); if(post)renderCardThumbnail(card,post);
 	  }
@@ -349,6 +350,11 @@ function button(text, fn, ghost = true) { return el('button', { class: 'pv-btn' 
 // Sanitise captions using an allowlist; only HTTP(S) external links survive.
 export function postContent(p) {
   const content = el('div', { class: 'post-content' });
+  if (p.extra?.media_access === 'login_required') {
+    content.append(el('p', { text: 'Для просмотра этого файла войдите в e621 с именем пользователя и API-ключом.' }));
+  } else if (p.extra?.media_access === 'unavailable') {
+    content.append(el('p', { text: 'e621 не предоставил доступ к этому файлу.' }));
+  }
   if (p.extra?.title) content.append(el('h3', { text: p.extra.title }));
   const parsed = new DOMParser().parseFromString(String(p.extra?.content || ''), 'text/html');
   const allowed = new Set(['P', 'BR', 'DIV', 'SPAN', 'B', 'STRONG', 'I', 'EM', 'U', 'S', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'PRE', 'CODE', 'H1', 'H2', 'H3', 'H4', 'A', 'HR']);

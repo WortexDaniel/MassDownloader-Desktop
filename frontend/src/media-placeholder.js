@@ -19,6 +19,8 @@ const META = {
   file: { icon: 'file', label: 'Файл' },
   attachments: { icon: 'paperclip', label: 'Вложения' },
   locked: { icon: 'lock', label: 'Закрыто' },
+  loginRequired: { icon: 'lock', label: 'Требуется вход в e621' },
+  unavailable: { icon: 'imageOff', label: 'Файл недоступен' },
 };
 
 export function fileKind(ext) {
@@ -30,8 +32,11 @@ const attachmentCount = post => Number(post?.attachment_count) || ['files', 'med
   .reduce((n, key) => n + (Array.isArray(post?.extra?.[key]) ? post.extra[key].length : 0), 0);
 export function postKind(post) {
   if (post?.file) return fileKind(post.file.ext);
+  if (post?.extra?.media_access === 'login_required') return 'loginRequired';
+  if (post?.extra?.media_access === 'unavailable') return 'unavailable';
   if (attachmentCount(post) > 0) return 'attachments';
   if (Number(post?.extra?.locked_count) > 0) return 'locked';
+  if (post?.site === 'e621' && !post.extra?.content && !post.extra?.title) return 'image';
   return 'text';
 }
 // First words of the post: title, otherwise the caption with markup removed.

@@ -10,6 +10,9 @@ func registerE621Net() {
 		Domain:       "e621.net",
 		StaticDomain: "static1.e621.net",
 		Engine:       "e621",
+		OptionalAuth: true,
+		AuthURL:      "https://e621.net/api_keys",
+		AuthFie:      []core.CredField{{Key: "login", Label: "Имя пользователя e621"}, {Key: "api_key", Label: "API-ключ e621"}},
 		// e621 documents a hard limit of 2 req/s and asks for ~1 req/s.
 		MinInterval: 0.75,
 		// e621 sits behind Cloudflare's interactive challenge; when it 403s,

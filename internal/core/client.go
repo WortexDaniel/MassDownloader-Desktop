@@ -12,6 +12,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -31,7 +32,7 @@ import (
 )
 
 // Version is the app version reported in the User-Agent.
-const Version = "4.5.2"
+const Version = "4.5.3"
 
 // ApiError is a failed API call; Status is the HTTP status when the error is
 // a bad response (mirrors client.ApiError).
@@ -208,6 +209,18 @@ func (c *ApiClient) Cred(siteKey, field string) string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return strings.TrimSpace(c.credentials[siteKey][field])
+}
+
+// E621Authorization returns the optional login and API key as one HTTP Basic credential.
+func (c *ApiClient) E621Authorization() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	fields := c.credentials["e621"]
+	login, key := strings.TrimSpace(fields["login"]), strings.TrimSpace(fields["api_key"])
+	if login == "" || key == "" {
+		return ""
+	}
+	return "Basic " + base64.StdEncoding.EncodeToString([]byte(login+":"+key))
 }
 
 func cloneStrMap(m map[string]string) map[string]string {
@@ -512,6 +525,9 @@ func (c *ApiClient) requestUncached(ctx context.Context, method, urlStr string,
 				uHost(urlStr))
 		}
 		if resp.StatusCode == 401 {
+			if isE621APIRequest(req) {
+				return nil, data, apiErrStatus(401, "e621 отклонил авторизацию. Проверьте имя пользователя и API-ключ в настройках e621.")
+			}
 			return nil, data, apiErrStatus(401,
 				"401 — сайт отклонил авторизацию. Проверьте api_key и user_id "+
 					"(скопируйте их целиком из настроек аккаунта — ключ обычно "+

@@ -1,6 +1,7 @@
 import { el, setStatus, state } from './main.js';
 import { postId, postKey, mediaURL, goldMediaPost } from './contracts.js';
 import { postContent } from './grid.js';
+import { openAuthDialog } from './dialogs.js';
 import { viewerImagePNG } from './image-copy.js';
 import { imageViewport } from './viewer-image.js';
 
@@ -284,6 +285,9 @@ export async function showViewer(original, gallery, { download, openAuthor, upda
     info.textContent = metadata.join('   ·   ');
     tags.textContent = (post.tags || []).join(' '); tags.hidden = !post.tags?.length;
     caption.replaceChildren(postContent(post)); caption.classList.toggle('text-only', !post.file);
+    if (post.extra?.media_access === 'login_required') {
+      caption.append(action('Войти в e621', () => openAuthDialog(state.sites.find(site => site.key === 'e621'))));
+    }
     clearCopyFeedback(); actions.replaceChildren();
     const prev = action('←', () => navigate(-1)); prev.disabled = index <= 0; prev.title = 'Предыдущий пост (←)';
     const next = action('→', () => navigate(1)); next.disabled = index >= posts.length - 1; next.title = 'Следующий пост (→)';
@@ -362,6 +366,11 @@ export async function showViewer(original, gallery, { download, openAuthor, upda
     refreshEvent();
   }));
   unbind.push(window.runtime?.EventsOn('history:changed', refreshEvent));
+  unbind.push(window.runtime?.EventsOn('credentials:changed', e621Changed => {
+    if (!e621Changed || closed || current.site !== 'e621') return;
+    posts[index] = { ...current, file: null, preview_url: '', sample_url: '', extra: { ...current.extra, media_access: undefined } };
+    showPost();
+  }));
   unbind.push(window.runtime?.EventsOn('library:changed', () => {
     if (closed || busy) return;
     const generation = ++version; stopMedia(); refreshButtons = []; mediaWrap.replaceChildren();

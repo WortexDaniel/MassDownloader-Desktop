@@ -89,7 +89,7 @@ func FetchPostsWithParser(c *core.ApiClient, site *core.Site, tags string,
 	if err != nil {
 		return nil, err
 	}
-	return parsePosts(data, site, parse)
+	return parsePosts(data, site, parse, site.Key == "e621" && c.E621Authorization() != "")
 }
 
 func postQueryParams(site *core.Site) url.Values {
@@ -101,7 +101,7 @@ func postQueryParams(site *core.Site) url.Values {
 	return q
 }
 
-func parsePosts(data any, site *core.Site, parse func(map[string]any, *core.Site) *core.PostInfo) ([]*core.PostInfo, error) {
+func parsePosts(data any, site *core.Site, parse func(map[string]any, *core.Site) *core.PostInfo, signedIn bool) ([]*core.PostInfo, error) {
 	var list []any
 	if m, ok := data.(map[string]any); ok {
 		var valid bool
@@ -123,6 +123,9 @@ func parsePosts(data any, site *core.Site, parse func(map[string]any, *core.Site
 		p := parse(d, site)
 		if p == nil || p.ID.String() == "" || p.ID.IsNu && p.ID.Num <= 0 {
 			return nil, fmt.Errorf("API: некорректный ID поста")
+		}
+		if signedIn && p.Extra["media_access"] == "login_required" {
+			p.Extra["media_access"] = "unavailable"
 		}
 		out = append(out, p)
 	}
@@ -189,7 +192,7 @@ func (e *Engine) ParsePost(d map[string]any, site *core.Site) *core.PostInfo {
 	fileURL, _ := original["url"].(string)
 	// Only legacy responses use the MD5 fallback. The current API can omit
 	// URLs for posts whose media is unavailable to the current user.
-	if files == nil && md5 != "" {
+	if site.Key != "e621" && files == nil && md5 != "" {
 		if fileURL == "" && ext != "" {
 			fileURL = site.FileURLFromMd5(md5, ext)
 		}
@@ -254,7 +257,7 @@ func (e *Engine) ParsePost(d map[string]any, site *core.Site) *core.PostInfo {
 		stats = d
 	}
 	score, _ := stats["score"].(map[string]any)
-	return &core.PostInfo{
+	post := &core.PostInfo{
 		ID:         core.I(core.AsInt(d["id"])),
 		Site:       site.Key,
 		File:       file,
@@ -267,6 +270,38 @@ func (e *Engine) ParsePost(d map[string]any, site *core.Site) *core.PostInfo {
 		Tags:       allTags,
 		CreatedAt:  core.ParseTime(d["created_at"]),
 	}
+	if _, specified := original["url"]; site.Key == "e621" && specified && md5 != "" && ext != "" &&
+		fileURL == "" && previewURL == "" && sampleURL == "" {
+		reason := "login_required"
+		if flags, _ := d["flags"].(map[string]any); flags["deleted"] == true {
+			reason = "unavailable"
+		}
+		post.AttachmentCount = 1
+		post.Extra = map[string]any{"media_access": reason}
+	}
+	return post
+}
+
+func (e *Engine) PrepareView(c *core.ApiClient, post *core.PostInfo) (bool, error) {
+	if post.Site != "e621" || post.File != nil ||
+		(post.Extra["media_access"] == "login_required" && c.E621Authorization() == "") {
+		return false, nil
+	}
+	// Older saved posts can have neither a file nor an access marker.
+	fresh, err := e.PostByID(c, core.GetSite(post.Site), post.ID)
+	if err != nil || fresh == nil {
+		return false, err
+	}
+	for key, value := range post.Extra {
+		if key != "media_access" {
+			if fresh.Extra == nil {
+				fresh.Extra = map[string]any{}
+			}
+			fresh.Extra[key] = value
+		}
+	}
+	*post = *fresh
+	return true, nil
 }
 
 func imageVariantURL(value any) string {

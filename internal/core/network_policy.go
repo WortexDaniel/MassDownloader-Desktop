@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"math/rand/v2"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -213,11 +214,12 @@ func (b *networkBody) Close() error {
 // headers and body (API, thumbnails); for streams header bounds the wait for
 // headers and idle is a watchdog reset by every received chunk.
 type policyTransport struct {
-	base    http.RoundTripper
-	api     bool
-	timeout time.Duration
-	header  time.Duration
-	idle    time.Duration
+	e621Authorization string
+	base              http.RoundTripper
+	api               bool
+	timeout           time.Duration
+	header            time.Duration
+	idle              time.Duration
 }
 
 func (p *policyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -261,6 +263,11 @@ func (p *policyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		timer = time.AfterFunc(limit, func() { timedOut.Store(true); cancel() })
 	}
 	sent := req.WithContext(sendCtx)
+	// Add credentials at the transport boundary so redirects cannot forward them to the CDN.
+	if p.e621Authorization != "" && isE621APIRequest(sent) {
+		sent.Header = req.Header.Clone()
+		sent.Header.Set("Authorization", p.e621Authorization)
+	}
 	resp, err := p.base.RoundTrip(sent)
 	if err != nil && sendCtx.Err() == nil {
 		resp, err = reconnectLocalProxy(sent, p.base, err)
@@ -314,13 +321,22 @@ func (p *policyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 // doNetwork sends req through the policy transport. client.Timeout becomes
 // the per-attempt deadline counted from admission, not from queueing.
+func isE621APIRequest(req *http.Request) bool {
+	return req.Method == http.MethodGet && req.URL.Scheme == "https" &&
+		(req.URL.Host == "e621.net" || req.URL.Host == "e621.net:443") && strings.HasSuffix(req.URL.Path, ".json")
+}
+
 func (c *ApiClient) doNetwork(req *http.Request, client *http.Client, api bool) (*http.Response, error) {
 	copy := *client
 	base := copy.Transport
 	if base == nil {
 		base = http.DefaultTransport
 	}
-	copy.Transport = &policyTransport{base: base, api: api, timeout: client.Timeout}
+	transport := &policyTransport{base: base, api: api, timeout: client.Timeout}
+	if api && isE621APIRequest(req) {
+		transport.e621Authorization = c.E621Authorization()
+	}
+	copy.Transport = transport
 	copy.Timeout = 0
 	return copy.Do(req)
 }

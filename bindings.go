@@ -328,11 +328,12 @@ func (a *App) setCredentials(creds map[string]map[string]string) error {
 	if a.loader != nil {
 		a.loader.ClearPending()
 	}
+	previousE621 := a.manager.Client.E621Authorization()
 	a.manager.Client.SetCredentials(creds)
 	a.loader.Client.SetCredentials(creds)
 	a.settings.Set("credentials", creds)
 	err := a.settings.Save()
-	a.emit("credentials:changed")
+	a.emit("credentials:changed", previousE621 != a.manager.Client.E621Authorization())
 	return err
 }
 

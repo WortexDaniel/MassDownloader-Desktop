@@ -136,6 +136,10 @@ export function openAuthDialog(requestedSite) {
       const vals = {};
       for (const [k, inp] of Object.entries(fields)) vals[k] = inp.value.trim();
       if(site.requires_auth&&(site.auth_fields||[]).some(f=>!vals[f.key])) {showStatus('Заполните обязательные поля авторизации',true);return;}
+      if (site.key === 'e621' && Boolean(vals.login) !== Boolean(vals.api_key)) {
+        showStatus('Укажите и имя пользователя, и API-ключ e621.', true);
+        return;
+      }
       creds[site.key] = { ...mine, ...vals };
       try {
         await window.go.main.App.SetCredentials(creds);
