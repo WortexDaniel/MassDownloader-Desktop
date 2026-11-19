@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -118,7 +117,7 @@ func (e *Engine) FetchPage(c *core.ApiClient, site *core.Site, tags string, limi
 		if cursor != nil && text != "1" && text != "" {
 			return core.PageResult{}, fmt.Errorf("некорректная страница популярного")
 		}
-		data, fetchErr := c.GetJSON(nil, site.Base()+"/popular.json", url.Values{}, nil)
+		data, fetchErr := c.GetJSON(nil, site.Base()+"/popular.json", postQueryParams(site), nil)
 		if fetchErr != nil {
 			return core.PageResult{}, fetchErr
 		}

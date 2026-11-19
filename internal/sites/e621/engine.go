@@ -1,9 +1,7 @@
 // Package e621 — the Danbooru-derived engine and its two sites.
 //
-// GET /posts.json?tags=...&limit=320&page=... -> {"posts":[...]}.
+// GET /posts.json?tags=...&limit=320&page=... -> an array of posts or {"posts":[...]}.
 // Cursor pagination via page=b<lowest_id> walks past the page-750 wall.
-// Posts hidden by the anonymous blacklist have file.url=null; the URL is
-// reconstructed from the always-present md5.
 // GET /tags/autocomplete.json?search[name_matches]=... — tag suggestions.
 // GET /tags.json?search[name_matches]=*x*&search[category]=1 — artists.
 package e621
@@ -83,7 +81,7 @@ func FetchPostsWithParser(c *core.ApiClient, site *core.Site, tags string,
 	if !strings.Contains(tags, "order:") {
 		tags = strings.TrimSpace(tags + " order:id_desc")
 	}
-	q := url.Values{}
+	q := postQueryParams(site)
 	q.Set("tags", tags)
 	q.Set("limit", fmt.Sprint(limit))
 	q.Set("page", pageString(page))
@@ -92,6 +90,15 @@ func FetchPostsWithParser(c *core.ApiClient, site *core.Site, tags string,
 		return nil, err
 	}
 	return parsePosts(data, site, parse)
+}
+
+func postQueryParams(site *core.Site) url.Values {
+	q := url.Values{}
+	if site.Key == "e621" {
+		// The default response omits tag categories, including the artist group.
+		q.Set("mode", "extended")
+	}
+	return q
 }
 
 func parsePosts(data any, site *core.Site, parse func(map[string]any, *core.Site) *core.PostInfo) ([]*core.PostInfo, error) {
@@ -159,44 +166,47 @@ func (e *Engine) NextCursor(tags string, batch []*core.PostInfo, cursor any) any
 
 // ParsePost converts one API payload into PostInfo.
 func (e *Engine) ParsePost(d map[string]any, site *core.Site) *core.PostInfo {
-	f, _ := d["file"].(map[string]any)
-	md5 := ""
-	ext := ""
-	var fURL any
-	size, width, height := int64(0), 0, 0
-	if f != nil {
-		md5 = core.Str_(f["md5"])
-		ext = strings.ToLower(core.Str_(f["ext"]))
-		fURL = f["url"]
-		size = core.AsInt(f["size"])
-		width = int(core.AsInt(f["width"]))
-		height = int(core.AsInt(f["height"]))
+	metadata, _ := d["file"].(map[string]any)
+	original := metadata
+	preview, _ := d["preview"].(map[string]any)
+	previewURL, _ := preview["url"].(string)
+	sample, _ := d["sample"].(map[string]any)
+	sampleURL, _ := sample["url"].(string)
+	files, _ := d["files"].(map[string]any)
+	if files != nil {
+		metadata, _ = files["meta"].(map[string]any)
+		original, _ = files["original"].(map[string]any)
+		previewURL = imageVariantURL(files["preview"])
+		sampleURL = ""
+		hasSample, specified := metadata["has_sample"].(bool)
+		if !specified || hasSample {
+			sampleURL = imageVariantURL(files["sample"])
+		}
 	}
-	urlStr, _ := fURL.(string)
-	if urlStr == "" && md5 != "" && ext != "" {
-		urlStr = site.FileURLFromMd5(md5, ext)
+
+	md5 := core.Str_(metadata["md5"])
+	ext := strings.ToLower(core.Str_(metadata["ext"]))
+	fileURL, _ := original["url"].(string)
+	// Only legacy responses use the MD5 fallback. The current API can omit
+	// URLs for posts whose media is unavailable to the current user.
+	if files == nil && md5 != "" {
+		if fileURL == "" && ext != "" {
+			fileURL = site.FileURLFromMd5(md5, ext)
+		}
+		if previewURL == "" {
+			previewURL = site.PreviewURLFromMd5(md5)
+		}
 	}
 	var file *core.PostFile
-	if urlStr != "" && md5 != "" {
-		file = &core.PostFile{URL: urlStr, MD5: md5, Ext: ext,
-			Size: size, Width: width, Height: height}
-	}
-	preview, _ := d["preview"].(map[string]any)
-	previewURL := ""
-	if preview != nil {
-		previewURL, _ = preview["url"].(string)
-	}
-	if previewURL == "" && md5 != "" {
-		previewURL = site.PreviewURLFromMd5(md5)
-	}
-	sampleMap, _ := d["sample"].(map[string]any)
-	sampleURL := ""
-	if sampleMap != nil {
-		sampleURL, _ = sampleMap["url"].(string)
+	if fileURL != "" && md5 != "" {
+		file = &core.PostFile{
+			URL: fileURL, MD5: md5, Ext: ext, Size: core.AsInt(metadata["size"]),
+			Width: int(core.AsInt(original["width"])), Height: int(core.AsInt(original["height"])),
+		}
 	}
 	if sampleURL == "" {
-		if core.IMAGE_EXTS[ext] {
-			sampleURL = urlStr
+		if core.IMAGE_EXTS[ext] && fileURL != "" {
+			sampleURL = fileURL
 		} else {
 			sampleURL = previewURL
 		}
@@ -223,6 +233,12 @@ func (e *Engine) ParsePost(d map[string]any, site *core.Site) *core.PostInfo {
 				}
 			}
 		}
+	} else if list, ok := d["tags"].([]any); ok {
+		for _, t := range list {
+			if s, ok := t.(string); ok {
+				allTags = append(allTags, s)
+			}
+		}
 	}
 	banned := map[string]bool{"conditional_dnp": true, "avoid_posting": true,
 		"unknown_artist": true, "third-party_edit": true,
@@ -233,23 +249,34 @@ func (e *Engine) ParsePost(d map[string]any, site *core.Site) *core.PostInfo {
 			artists = append(artists, t)
 		}
 	}
-	score := int64(0)
-	if sm, ok := d["score"].(map[string]any); ok {
-		score = core.AsInt(sm["total"])
+	stats, ok := d["stats"].(map[string]any)
+	if !ok {
+		stats = d
 	}
+	score, _ := stats["score"].(map[string]any)
 	return &core.PostInfo{
 		ID:         core.I(core.AsInt(d["id"])),
 		Site:       site.Key,
 		File:       file,
 		PreviewURL: previewURL,
 		SampleURL:  sampleURL,
-		Score:      score,
-		FavCount:   core.AsInt(d["fav_count"]),
+		Score:      core.AsInt(score["total"]),
+		FavCount:   core.AsInt(stats["fav_count"]),
 		Rating:     core.StrDflt_(d["rating"], "?"),
 		Artists:    artists,
 		Tags:       allTags,
 		CreatedAt:  core.ParseTime(d["created_at"]),
 	}
+}
+
+func imageVariantURL(value any) string {
+	variant, _ := value.(map[string]any)
+	jpg, _ := variant["jpg"].(string)
+	if jpg != "" {
+		return jpg
+	}
+	webp, _ := variant["webp"].(string)
+	return webp
 }
 
 // Autocomplete fetches tag suggestions from /tags/autocomplete.json.

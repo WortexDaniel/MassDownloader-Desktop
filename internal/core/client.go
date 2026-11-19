@@ -31,7 +31,7 @@ import (
 )
 
 // Version is the app version reported in the User-Agent.
-const Version = "3.0.0-go"
+const Version = "4.5.2"
 
 // ApiError is a failed API call; Status is the HTTP status when the error is
 // a bad response (mirrors client.ApiError).
